@@ -8,13 +8,17 @@ Estrategia
 CORONASPHERES
 
 1) HACER FOTOS hasta T segundos antes de la llamarada.
+
 2) ESCONDERSE Y ESPERAR a la llamarada.
 
 Links:
 
 Game manual: http://static.zerorobotics.mit.edu/docs/hs/CoronaSPHERES_Manual_v2.0.pdf
+
 Tournament: http://zerorobotics.mit.edu/tournaments/16/
+
 Zero Robotics tutorials: http://zerorobotics.mit.edu/tutorials/
+
 
 GitHub
 ==============
@@ -24,6 +28,8 @@ As you should already know, we have chosen to write code through this page rathe
 What is Github? GitHub is a platform developed to help open source programmers to coordinate their efforts and write code together. To do so it employs Git, a VCS (Version Control System) software which keeps track of the changes made to the repository by every developer collaborating in a proyect. This enables programmers to work with no fear of getting in the way of other collaborators, unlike in the unfortunately not team friendly ZR IDE.
 
 Using GitHub
+
+
 Before you continue reading, I invite you to create an account in GitHub.
 
 Ready? Then look carefully at the buttons shown over this file.
