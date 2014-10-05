@@ -19,6 +19,8 @@ Game manual: http://static.zerorobotics.mit.edu/docs/hs/CoronaSPHERES_Manual_v2.
 
 Tournament: http://zerorobotics.mit.edu/tournaments/16/
 
+API: http://static.zerorobotics.mit.edu/docs/tutorials/ZR_user_API.pdf
+
 Zero Robotics tutorials: http://zerorobotics.mit.edu/tutorials/
 
 
