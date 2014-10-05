@@ -1,8 +1,9 @@
-      WeWinThisTime
+WeWinThisTime
 =============================
+
 ¡¡Que Letona no nos castre!!
 
-</b>Repository Harmonices Mundi</b>
+<b>Repository Harmonices Mundi</b>
 
 Estrategia
 =============
