@@ -3,12 +3,22 @@ WeWinThisTime
 
 Repository Harmonices Mundi
 
-Some useful links:
+Estrategia
+=============
+CORONASPHERES
 
-Game manual: https://www.zerorobotics.org/documents/10429/0/CosmoSPHERES_Manual.pdf
-API reference: https://www.zerorobotics.org/documents/10429/374963/ZR_user_API.pdf
-Zero Robotics tutorials: https://www.zerorobotics.org/web/zero-robotics/tutorials
+1) HACER FOTOS hasta T segundos antes de la llamarada.
+2) ESCONDERSE Y ESPERAR a la llamarada.
+
+Links:
+
+Game manual: http://static.zerorobotics.mit.edu/docs/hs/CoronaSPHERES_Manual_v2.0.pdf
+Tournament: http://zerorobotics.mit.edu/tournaments/16/
+Zero Robotics tutorials: http://zerorobotics.mit.edu/tutorials/
+
 GitHub
+==============
+
 As you should already know, we have chosen to write code through this page rather than using the official IDE provided by Zero Robotics. You may ask, why so? To answer your curiosity, I will simply invite you to try and edit a snippet of code in ZR IDE while one of your fellow companions is already working on it. Can you see the multiple errors popping out of nowhere? Yes? Well, that's your reason to change to GitHub.
 
 What is Github? GitHub is a platform developed to help open source programmers to coordinate their efforts and write code together. To do so it employs Git, a VCS (Version Control System) software which keeps track of the changes made to the repository by every developer collaborating in a proyect. This enables programmers to work with no fear of getting in the way of other collaborators, unlike in the unfortunately not team friendly ZR IDE.
