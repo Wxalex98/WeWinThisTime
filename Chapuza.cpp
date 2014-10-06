@@ -1,6 +1,6 @@
-float ourPack[3];
-float ourState[12];
-float ourPos[3];
+float ourPack[3];	
+float ourState[12];];
+float ourPos[3
 float vectorBetween[3];
 float attTarget[3];
 float zero[3];
@@ -12,6 +12,7 @@ int counter;
 
 void init(){
     api.getMyZRState(ourState);
+    
     if (ourState[1]>0.0f){
 	    ourPack[0] = -0.5f;
 	    ourPack[1] = 0.6f;
@@ -35,30 +36,45 @@ void init(){
 	
 }
 void loop(){
-    api.getMyZRState(ourState);
+	api.getMyZRState(ourState);
+	
+	// Store the current position of the sphere in ourPos
 	for (int i=0;i<3;i++){
 	    ourPos[i] = ourState[i];
 	}
-	    mathVecSubtract(vectorBetween,ourPack,ourPos,3);
-	    float distance = mathVecMagnitude(vectorBetween,3);
-	    api.setPositionTarget(ourPack);
-	    if (distance<0.05f){
-	        
+	
+	// Distance from ourPos to ourPack
+	mathVecSubtract(vectorBetween,ourPack,ourPos,3);
+	float distance = mathVecMagnitude(vectorBetween,3);
+	
+	// Go to ourPack
+	api.setPositionTarget(ourPack);
+	
+	if (distance<0.05f){
+			// Stop
 	        api.setPositionTarget(ourPos);
+	        
+	        // Current attitude
 	        for (int j=0;j<3;j++){
 	            ourAtt[j] = ourState[j+6];
 	            if(counter==0){
 	                initAtt[j]=ourState[j+6];
 	            }
 	        }
+	        // How many degrees we have rotated
 	        dot = mathVecInner(initAtt,ourAtt,3);
 	        angle = acosf(dot)*180/PI;
 	        DEBUG(("%f",angle));
-	        if (angle<90){
+	        
+	        
+	    if (angle<90){
+	        // Keep rotating
                 api.setAttRateTarget(attTarget);
             }else{
+            	// Stop rotating
                 api.setAttRateTarget(zero);
 	        }
             counter++;
 	    }
 }
+
