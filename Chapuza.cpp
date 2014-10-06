@@ -74,8 +74,9 @@ void loop(){
         }else{
             // Stop rotating
             api.setAttRateTarget(zero);
-	}
+		}
         counter++;
+	
 	}
 }
 
