@@ -52,31 +52,31 @@ void loop(){
 	
 	if (distance<0.05f){
 		// Stop
-	    api.setPositionTarget(ourPos);
+		api.setPositionTarget(ourPos);
 	        
-	    // Current attitude
-	    for (int j=0;j<3;j++){
-	    	ourAtt[j] = ourState[j+6];
+	    	// Current attitude
+	    	for (int j=0;j<3;j++){
+	    		ourAtt[j] = ourState[j+6];
 			if(counter==0){
 				initAtt[j]=ourState[j+6];
-	        }
-	    }
+	        	}
+	    	}
 	        
-	    // How many degrees we have rotated
-	    dot = mathVecInner(initAtt,ourAtt,3);
-	    angle = acosf(dot)*180/PI;
-	    DEBUG(("%f",angle));
+	    	// How many degrees we have rotated
+		dot = mathVecInner(initAtt,ourAtt,3);
+		angle = acosf(dot)*180/PI;
+		DEBUG(("%f",angle));
 	        
 	     
 		if (angle<90){
-	    	// Keep rotating
-            api.setAttRateTarget(attTarget);
-        }else{
-            // Stop rotating
-            api.setAttRateTarget(zero);
+	    		// Keep rotating
+        		api.setAttRateTarget(attTarget);
+        	}else{
+            		// Stop rotating
+        		api.setAttRateTarget(zero);
 		}
-        counter++;
-	
+		
+        	counter++;
 	}
 }
 
