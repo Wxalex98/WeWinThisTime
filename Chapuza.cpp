@@ -62,17 +62,17 @@ void loop(){
 	        	}
 	    	}
 	        
-	    	// How many degrees we have rotated
+	    	// How many degrees the sphere has turned
 		dot = mathVecInner(initAtt,ourAtt,3);
 		angle = acosf(dot)*180/PI;
 		DEBUG(("%f",angle));
 	        
 	     
 		if (angle<90){
-	    		// Keep rotating
+	    		// Keep turning
         		api.setAttRateTarget(attTarget);
         	}else{
-            		// Stop rotating
+            		// Stop turning
         		api.setAttRateTarget(zero);
 		}
 		
