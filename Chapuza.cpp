@@ -22,9 +22,6 @@ void init(){
     	ourPack[1] = -0.6f;
     	ourPack[2] = 0.0f;
     }
-	shadowZone[0] = 0.5f;
-	shadowZone[1] = 0.0f;
-	shadowZone[2] = 0.0f;
 	
 	zero[0] = 0.0f;
 	zero[0] = 0.0f;
@@ -35,8 +32,6 @@ void init(){
     attTarget[2] = 15*PI/180;
     
     counter = 0;
-    
-    gotMemo = false;
 	
 }
 void loop(){
