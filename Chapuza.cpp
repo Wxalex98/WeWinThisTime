@@ -1,6 +1,6 @@
 float ourPack[3];	
-float ourState[12];];
-float ourPos[3
+float ourState[12];
+float ourPos[3];
 float vectorBetween[3];
 float attTarget[3];
 float zero[3];
