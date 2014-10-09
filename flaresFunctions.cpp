@@ -1,18 +1,22 @@
 float ourState[12];
 float ourPos[3];
 float centerPos[3];
+float posTarget[3];
 float attTarget[3];
 bool insideShadow;
 float asteroidRadius;
 float distance2center;
+float sphereRadius;
 
-void init();
+void init(){
     asteroidRadius = 0.22f;
+    sphereRadius = 0.11f;
     centerPos[1] = 0;
     centerPos[2] = 0;
+}
     
 //Returns true if we are in the shadow zone
-void areWeinsideShadow();
+void areWeinsideShadow(){
     centerPos[0] = ourPos[0];
     getDistance(distance2center,centerPos, ourPos);
     
@@ -21,6 +25,7 @@ void areWeinsideShadow();
     } else {
         insideShadow = false;
     }
+}
 
 
 void main(){
@@ -33,11 +38,17 @@ void main(){
 	}
     
     if (not areWeinsideShadow){
-        
-        // to lo que queda por escribir
+    	// Sin optimizar, simplemente que vaya al rectángulo (mañana la matizo)
+        if (ourPos[0] > 0 && ourPos[0] < (asteroidRadius + sphereRadius + 0.1f)) {
+        	centerPos[0] = asteroidRadius + sphereRadius + 0.1f;
+        } else if (ourPos[0] > asteroidRadius + sphereRadius + 0.1f) {
+        	centerPos[0] = ourPos[0];
+	}
+	api.setPositionTarget(centerPos);
     }
+        // to lo que queda por escribir
+}
     
     
     //api.setPositionTarget(pos);
-}
 
