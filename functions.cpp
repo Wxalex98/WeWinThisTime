@@ -13,3 +13,7 @@ float getAngle(float initAtt[3],float currentAtt[3]){
 		float angle = acosf(dot)*180/PI;
 		return angle;
 }
+
+void goForPics(float pos[3]){
+    api.setPositionTarget(pos);
+}
