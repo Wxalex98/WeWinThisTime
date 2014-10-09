@@ -57,7 +57,9 @@ void loop(){
 	}
 	if ((game.hasMemoryPack(0,0))||(weHaveMemory)){
 	    api.setAttRateTarget(zero);
-	    goForPics(initPos);
+	    if(!(shouldCover)){
+	        goForPics(initPos);
+	    }
 	}else{
 	    // Call function to go for the pack
         weHaveMemory = goForPack(ourPack,ourState,ourPos,attTarget);
