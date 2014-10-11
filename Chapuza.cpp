@@ -25,8 +25,8 @@ void init(){
     }
 	
 	zero[0] = 0.0f;
-	zero[0] = 0.0f;
-	zero[0] = 0.0f;
+	zero[1] = 0.0f;
+	zero[2] = 0.0f;
 	
     attTarget[0] = 0.00;
     attTarget[1] = 0.00;
