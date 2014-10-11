@@ -1,0 +1,31 @@
+int nextF;
+
+void nextFlare(float ourPos[3]){
+    game.getNextFlare(nextF);
+    if (nextF == 30){
+        DEBUG (("Next flare will come in 30 seconds"))
+     else if(nextF == 15 || areWeinsideShadow(ourPos)) == false){
+         
+         // aqui va la funcion de ir a la sombra
+         
+     else if(nextF == 15 || areWeinsideShadow(ourPos)) == true){
+         // aqui va cuando ya estamos en sombra (subir fotos, etc, todo lo que se os ocurra durante esos 3 secs)
+         api.setPositionTarget(ourPos) 
+         game.uploadPic() // 3 segundos sin cámara
+     }
+     }
+    }
+}
+
+================================================================================================================================
+
+bool areWeinsideShadow(float ourPos[3]){
+    centerPos[0] = ourPos[0];
+    getDistance(distance2center,centerPos, ourPos);
+    
+    if (ourPos[0] > 0 && distance2center < asteroidRadius) {
+        return true;
+    } else {
+        return false;
+    }
+} 
