@@ -7,29 +7,35 @@ bool insideShadow;
 float asteroidRadius;
 float distance2center;
 float sphereRadius;
+float vector[3];
+float dist;
 
 void init(){
     asteroidRadius = 0.22f;
     sphereRadius = 0.11f;
-    centerPos[1] = 0;
-    centerPos[2] = 0;
+    centerPos[1] = 0.0f;
+    centerPos[2] = 0.0f;
+    insideShadow = false;
 }
-    
-//Returns true if we are in the shadow zone
-void areWeinsideShadow(){
+
+float getDistance(float pos[3],float target[3]){
+    mathVecSubtract(vector,target,pos,3);
+    dist = mathVecMagnitude(vector,3);
+    return dist;
+}
+
+bool areWeinsideShadow(){
     centerPos[0] = ourPos[0];
-    getDistance(distance2center,centerPos, ourPos);
+    distance2center = getDistance(centerPos, ourPos);
     
     if (ourPos[0] > 0 && distance2center < asteroidRadius) {
-        insideShadow = true;
+       return true;
     } else {
-        insideShadow = false;
+        return false;
     }
 }
 
-
-void main(){
-    
+void loop(){
     api.getMyZRState(ourState); //Update our state
     
     // Store the current position of the sphere in ourPos
@@ -37,18 +43,20 @@ void main(){
 	    ourPos[i] = ourState[i];
 	}
     
-    if (not areWeinsideShadow){
+    if (not areWeinsideShadow()){
     	// Sin optimizar, simplemente que vaya al rectángulo (mañana la matizo)
         if (ourPos[0] > 0 && ourPos[0] < (asteroidRadius + sphereRadius + 0.1f)) {
         	centerPos[0] = asteroidRadius + sphereRadius + 0.1f;
         } else if (ourPos[0] > asteroidRadius + sphereRadius + 0.1f) {
-        	centerPos[0] = ourPos[0];
-	}
-	api.setPositionTarget(centerPos);
+              	centerPos[0] = ourPos[0];
+	    }
+	    api.setPositionTarget(centerPos);
+    } else {
+        api.setPositionTarget(ourPos);
     }
         // to lo que queda por escribir
 }
-    
-    
-    //api.setPositionTarget(pos);
 
+
+
+	
