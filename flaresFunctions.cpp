@@ -6,6 +6,8 @@ float attTarget[3];
 bool insideShadow;
 float asteroidRadius;
 float distance2center;
+float tangentLine[2];
+float preventionRadius;
 float sphereRadius;
 float vector[3];
 float dist;
@@ -13,10 +15,12 @@ float dist;
 void init(){
     asteroidRadius = 0.22f;
     sphereRadius = 0.11f;
+    preventionRadius = asteroidRadius + sphereRadius + 0.05f;
     centerPos[1] = 0.0f;
     centerPos[2] = 0.0f;
     insideShadow = false;
 }
+
 
 float getDistance(float pos[3],float target[3]){
     mathVecSubtract(vector,target,pos,3);
@@ -24,11 +28,17 @@ float getDistance(float pos[3],float target[3]){
     return dist;
 }
 
-bool areWeinsideShadow(){
-    centerPos[0] = ourPos[0];
-    distance2center = getDistance(centerPos, ourPos);
+float tangentCircle(float point[3]) {
+	
+	
+	
+}
+
+bool areWeinsideShadow(float pos[3]){
+    centerPos[0] = pos[0];
+    distance2center = getDistance(centerPos, pos);
     
-    if (ourPos[0] > 0 && distance2center < asteroidRadius) {
+    if (pos[0] > 0 && distance2center < asteroidRadius) {
        return true;
     } else {
         return false;
@@ -43,13 +53,13 @@ void loop(){
 	    ourPos[i] = ourState[i];
 	}
     
-    if (not areWeinsideShadow()){
-    	// Sin optimizar, simplemente que vaya al rectángulo (mañana la matizo)
-        if (ourPos[0] > 0 && ourPos[0] < (asteroidRadius + sphereRadius + 0.1f)) {
-        	centerPos[0] = asteroidRadius + sphereRadius + 0.1f;
-        } else if (ourPos[0] > asteroidRadius + sphereRadius + 0.1f) {
+    if (not areWeinsideShadow(ourState)){
+    	
+        if (ourPos[0] > 0 && ourPos[0] < preventionRadius) {
+        	centerPos[0] = preventionRadius;
+        } else if (ourPos[0] > preventionRadius) {
               	centerPos[0] = ourPos[0];
-	    }
+	}
 	    api.setPositionTarget(centerPos);
     } else {
         api.setPositionTarget(ourPos);
