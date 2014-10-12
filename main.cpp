@@ -6,6 +6,7 @@ float randomPlace[3];
 int counter;
 bool weHaveMemory;
 float zero[3];
+
 void init(){
     zero[0] = 0.0f;
     zero[1] = 0.0f;
@@ -33,18 +34,18 @@ void init(){
 }
 
 void loop(){
-    api.getMyZRState(ourState); //Update our state
+	api.getMyZRState(ourState); //Update our state
     
-    // Store the current position of the sphere in ourPos
+    	// Store the current position of the sphere in ourPos
 	for (int i=0;i<3;i++){
-	    ourPos[i] = ourState[i];
+		ourPos[i] = ourState[i];
 	}
 	
 	if ((game.hasMemoryPack(0,0))||(weHaveMemory)){
-	    api.setAttRateTarget(zero);
-	    api.setPositionTarget(randomPlace);
+		api.setAttRateTarget(zero);
+		api.setPositionTarget(randomPlace);
 	}else{
-	    // Call function to go for the pack
-        weHaveMemory = goForPack(ourPack,ourState,ourPos,attTarget);
+		// Call function to go for the pack
+        	weHaveMemory = goForPack(ourPack,ourState,ourPos,attTarget);
     }
 }
