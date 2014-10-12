@@ -23,15 +23,3 @@ void nextFlare(float ourPos[3]){
     }
 }
 
-================================================================================================================================
-
-bool areWeinsideShadow(float ourPos[3]){
-    centerPos[0] = ourPos[0];
-    getDistance(distance2center,centerPos, ourPos);
-    
-    if (ourPos[0] > 0 && distance2center < asteroidRadius) {
-        return true;
-    } else {
-        return false;
-    }
-} 
