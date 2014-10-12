@@ -1,0 +1,58 @@
+//Declare any variables shared between functions here
+float eje[3];
+float vec[3];
+float rot[3];
+float dest[3];
+float temp[3];
+float angle;
+int counter;
+float myPos[3];
+float myState[12];
+
+void init(){
+	//This function is called once when your code is first loaded.
+
+	//IMPORTANT: make sure to set any variables that need an initial value.
+	//Do not assume variables will be set to 0 automatically!
+	eje[0] = 1.0f;
+	eje[1] = 1.0f;
+	eje[2] = 1.0f;
+	vec[0] = 1.0f;
+	vec[1] = 0.0f;
+	vec[2] = 0.0f;
+	dest[0] = 0.5f;
+	dest[1] = -0.1f;
+	dest[2] = -1.0f;
+	angle = 18.0f;
+	counter = 0;
+}
+
+void loop(){
+	//This function is called once per second.  Use it to control the satellite.
+	api.getMyZRState(myState);
+	for (int i=0; i<3; i++)
+	    myPos[i] = myState[i];
+	rotar_vector(rot, eje, vec, angle);
+	DEBUG(("Eje de rotación: <%f, %f, %f>\n", eje[0], eje[1], eje[2]));
+	DEBUG(("Vector original: <%f, %f, %f>\n", vec[0], vec[1], vec[2]));
+	DEBUG(("Vector rotado %f grados: <%f, %f, %f>\n", angle, rot[0], rot[1], rot[2]));
+	DEBUG(("---- t = %d -----\n", counter));
+	counter++;
+	for (int i=0; i<3; i++)
+	    vec[i] = rot[i];
+	
+}
+
+void rotar_vector(float rot[3], float eje[3], float vec[3], float ang) {
+    // rotar_vector() devuelve en *rot[]* el vector *vec[]*
+    // rotado *ang* grados alrededor del vector *eje[]*
+    // según la regla de la mano derecha o del sacacorchos
+    // usando la fórmula de Rodrigues (ver en wikipedia Rodrigues'_rotation_formula)
+    mathVecNormalize(eje, 3); // normalizamos el eje
+    float cross[3];
+    mathVecCross(cross, eje, vec);
+    float dot = mathVecInner(eje, vec, 3);
+    ang = ang*PI/180;
+    for (int i=0; i<3; i++)
+        rot[i] = vec[i]*cosf(ang) + cross[i]*sinf(ang) + eje[i]*dot*2*mathSquare(sinf(ang/2));
+}
