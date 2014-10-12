@@ -3,9 +3,14 @@ float ourState[12];
 float ourPos[3];
 float attTarget[3];
 float randomPlace[3];
+float zero[3];
+float asteroidRadius;
+float sphereRadius;
+float preventionRadius;
 int counter;
 bool weHaveMemory;
-float zero[3];
+bool insideShadow;
+
 
 void init(){
     zero[0] = 0.0f;
@@ -31,6 +36,13 @@ void init(){
     randomPlace[0] = -0.5f;
     randomPlace[1] = 0.0f;
     randomPlace[2] = 0.0f;
+    
+    asteroidRadius = 0.22f;
+    sphereRadius = 0.11f;
+    preventionRadius = asteroidRadius + sphereRadius + 0.05f;
+    centerPos[1] = 0.0f;
+    centerPos[2] = 0.0f;
+    insideShadow = false;
 }
 
 void loop(){
