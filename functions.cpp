@@ -3,6 +3,7 @@ float vector[3];
 float dist;
 
 bool areWeinsideShadow(float pos[3]){
+    float distance2center;
     centerPos[0] = pos[0];
     distance2center = getDistance(centerPos, pos);
     
