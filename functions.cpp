@@ -26,3 +26,20 @@ float getAngle(float initAtt[3],float currentAtt[3]){
 		float angle = acosf(dot)*180/PI;
 		return angle;
 }
+
+void move(float ourPos[3],float target[3]){
+	float vec[3];
+	mathVecSubtract(vec,ourPos,target,3);
+	float dist = mathVecMagnitude(vec,3);
+	distancia_a_origen(float distanceToAstVec[3],ourPos,target);
+	float distanceToAst = mathVecMagnitude(distanceToAstVec,3);
+	if(distanceToAst<0.22){
+		dodgeAsteroid(); //Function needs to be created---------------------------------------------------
+	}
+	if(dist>0.1){
+		api.setVelocityTarget(vec);
+	}else{
+		api.setPositionTarget(target);
+	}
+	
+}
