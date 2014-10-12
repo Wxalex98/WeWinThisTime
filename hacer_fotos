@@ -1,0 +1,110 @@
+float poiPos[3][3];
+bool foto_hecha[3][2];
+for (int i=0; i<3; i++) {
+    for (int j=0; j<2; j++)
+        foto_hecha[i][j] = false;
+}
+float radios[2];
+float punto_foto[3];
+float orden[3];
+bool distancias_calculadas = false;
+int next;
+int next_orb;
+
+void hacer_fotos() {
+    if (!distancias_calculadas) {
+        for (int i=0; i<3; i++)
+            game.getPOILoc(poiPos[i], i);
+        getClosestPOI(orden);
+        distancias_calculadas = true;
+    }
+    siguiente_foto(next, next_orb);
+    if (distancia_a_punto(myPos, poiPos[next]) > 0.1f) {
+        api.setPositionTarget(punto_foto);
+        mathVecSubtract(attTarget, zero, myPos, 3);
+        api.setAttitudeTarget(attTarget);
+    }
+    else {
+        api.setPositionTarget(poiPos[next]);
+        if game.alignLine(next)
+            game.takePicture(next);
+        else
+            mathVecSubtract(attTarget, zero, myPos, 3);
+            api.setAttitudeTarget(attTarget);
+    }
+}
+
+void getClosestPOI(float orden[3]) {
+    float dist0 = distancia_a_punto(myPos, poiPos[0]);
+    float dist1 = distancia_a_punto(myPos, poiPos[1]);
+    float dist2 = distancia_a_punto(myPos, poiPos[2]);
+    if (dist0 < dist1) {
+        if (dist0 < dist2) {
+            if (dist1 < dist2) {
+                orden[0] = 0;
+                orden[1] = 1;
+                orden[2] = 2;
+            }
+            else {
+                orden[0] = 0;
+                orden[1] = 2;
+                orden[2] = 1;
+            }
+        }
+        else {
+            orden[0] = 2;
+            orden[1] = 0;
+            orden[2] = 1;
+        }
+    }
+    else {
+        if (dist2 < dist0) {
+            if (dist1 < dist2) {
+                orden[0] = 1;
+                orden[1] = 2;
+                orden[2] = 0;
+            }
+            else {
+                orden[0] = 2;
+                orden[1] = 1;
+                orden[2] = 0;
+            }
+        }
+        else {
+            orden[0] = 1;
+            orden[1] = 0;
+            orden[2] = 2;
+        }
+    }
+}
+
+float distancia_a_punto(float aqui[3], float alla[3]) {
+    float temp[3];
+    mathVecSubtract(temp, aqui, alla, 3);
+    return mathVecMagnitude(temp, 3);
+}
+
+void picPlace(float point[3], int poiId, int orbita) {
+    // devuelve el *point* para hacer foto del POI *poiId* desde
+    // órbita inferior (orbita=0) o superior (orbita=1)
+    float magn = mathVecMagnitude(poiPos[poiId], 3);
+    for (int i=0; i<3; i++)
+        point[i] = poiPos[poiId]*radios[orbita]/magn;
+}
+
+void siguiente_foto(int next, int next_orb) {
+    next = 0;
+    next_orb = 0;
+    while (true) {
+        if (!foto_hecha[next][next_orb]) {
+            break;
+        }
+        else if (next_orb == 0) {
+            next_orb = 1;
+        }
+        else {
+            next++;
+            next_orb = 0;
+        }
+    }
+}
