@@ -8,6 +8,7 @@ float asteroidRadius;
 float sphereRadius;
 float preventionRadius;
 int counter;
+int nextFlare;
 bool weHaveMemory;
 bool insideShadow;
 
@@ -47,17 +48,23 @@ void init(){
 
 void loop(){
 	api.getMyZRState(ourState); //Update our state
-    
+	game.getNextFlare(nextFlare);
+	
     	// Store the current position of the sphere in ourPos
 	for (int i=0;i<3;i++){
 		ourPos[i] = ourState[i];
 	}
-	
-	if ((game.hasMemoryPack(0,0))||(weHaveMemory)){
+	if (nextFlare < 15 and  (not areWeinsideShadow(ourPos))) {
+		goToShadow(ourPos);
+	} else if (nextFlare < 15) {
+		api.setPositionTarget(ourPos);
+        	game.uploadPic(); // 3 segundos sin cámara
+	} else if ((game.hasMemoryPack(0,0))||(weHaveMemory)) {
+		// take pictures function (?)
 		api.setAttRateTarget(zero);
 		api.setPositionTarget(randomPlace);
-	}else{
+	} else {
 		// Call function to go for the pack
         	weHaveMemory = goForPack(ourPack,ourState,ourPos,attTarget);
-    }
+    	}
 }
