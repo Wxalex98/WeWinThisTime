@@ -1,6 +1,12 @@
+// stopFac determina la distancia que va a pasar hasta que empecemos a usar setPositionTarget
+// Cuanto menor, mas rápido e impreciso
+// Si es 1 es como si usaramos setPositionTarget
+// En los tutoriales usan 0.94, pero creo que con 0.8 sirve. Cuanta menor distancia nos podemos permitir menor stopFac
+
+
 float weAreGoing[3];
 
-void goTo(float myPos[3], float posTarget[3], flaot preventDist, float speed){
+void goTo(float myPos[3], float posTarget[3], flaot preventDist, float stopFac){
   float vectorBetween;
   float distance;
 
@@ -12,7 +18,7 @@ void goTo(float myPos[3], float posTarget[3], flaot preventDist, float speed){
   
   if (preventDist == -1.0) {
   	athVecSubtract(vectorBetween,posTarget,myPos,3);ç
-  	preventDist = vectorBetween * speed; 
+  	preventDist = vectorBetween * stopFac; 
   }
     
   mathVecSubtract(vectorBetween,posTarget,myPos,3);
