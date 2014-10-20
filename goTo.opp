@@ -1,0 +1,25 @@
+float weAreGoing[3];
+
+void goTo(float myPos[3], float posTarget[3], flaot preventDist){
+  float vectorBetween;
+  float distance;
+
+  if (weAreGoing != posTarget) {
+    for (int i = 0; i<3; i++)
+        weAreGoing[i] = posTarget[i];
+    preventDist = -1.0;
+  }
+  
+  if (preventDist == -1.0)
+    
+  mathVecSubtract(vectorBetween,posTarget,myPos,3);
+	    
+	distance = mathVecMagnitude(vectorBetween,3);
+	
+	if (distance>preventDist) {
+	    api.setVelocityTarget(vectorBetween);
+	} else {
+	    api.setPositionTarget(posTarget);
+	}
+}
+
