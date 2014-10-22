@@ -1,4 +1,4 @@
-```c_cpp
+```c
 void actualizar_variables() {
     tiempo++;
 	api.getMyZRState(myState);
