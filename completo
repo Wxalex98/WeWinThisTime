@@ -1,0 +1,339 @@
+```c_cpp
+void actualizar_variables() {
+    tiempo++;
+	api.getMyZRState(myState);
+	for (int i=0; i<3; i++)
+	    myPos[i] = myState[i];
+	r = mathVecMagnitude(myPos, 3);
+	sig_llama = game.getNextFlare();
+	num_fotos = game.getMemoryFilled();
+	if (num_fotos == sig_foto + 1)
+	    sig_foto++;
+	orbita = sig_foto % 2;
+	if (tiempo % 60 == 1)
+	    preparar_fotos();
+}
+
+void apagar() {
+    api.setPositionTarget(myPos);
+    game.turnOff();
+    apagado = true;
+}
+
+void escala_vector(float point[3], float ahora[3], float radio) {
+    //DEBUG(("radio = %f\n", radio));
+    //DEBUG(("ahora = %f\n", mathVecMagnitude(ahora, 3)));
+    radio /= mathVecMagnitude(ahora, 3);
+    //DEBUG(("nuevo radio = %f\n", radio));
+    for (int i=0; i<3; i++)
+        point[i] = ahora[i]*radio;
+    //DEBUG(("vamos a altura %f\n", radio));
+}
+
+float distancia_a_punto(float aqui[3], float alla[3]) {
+    float temp[3];
+    mathVecSubtract(temp, aqui, alla, 3);
+    return mathVecMagnitude(temp, 3);
+}
+
+void distancia_a_origen(float dist[3], float orig[3], float dest[3]) {
+    // dist = p - (p·r)r
+    // donde r es un vector unitario que define la
+    // dirección de la recta y p un punto de la recta
+    // p. ej. p = orig, r = (dest-orig)/|(dest-orig)|
+    float r[3];
+    mathVecSubtract(r, dest, orig, 3);
+    mathVecNormalize(r, 3); // ahora ya r = (dest-orig)/|(dest-orig)|
+    float prod_esc = mathVecInner(orig, r, 3);
+    for (int i=0; i<3; i++) {
+        r[i] = r[i]*prod_esc;
+    } // tras el for, ahora r <- (p·r)r
+    mathVecSubtract(dist, orig, r, 3);
+}
+
+void rotar_vector(float rot[3], float eje[3], float vec[3], float ang) {
+    // rotar_vector() devuelve en *rot[]* el vector *vec[]*
+    // rotado *ang* grados alrededor del vector *eje[]*
+    // según la regla de la mano derecha o del sacacorchos
+    // usando la fórmula de Rodrigues (ver en wikipedia Rodrigues'_rotation_formula)
+    mathVecNormalize(eje, 3); // normalizamos el eje
+    float cross[3];
+    mathVecCross(cross, eje, vec);
+    float dot = mathVecInner(eje, vec, 3);
+    ang = ang*PI/180;
+    for (int i=0; i<3; i++)
+        rot[i] = vec[i]*cosf(ang) + cross[i]*sinf(ang) + eje[i]*dot*2*mathSquare(sinf(ang/2));
+}
+
+void dame_fase() {
+    /*
+	fase = 1 -> hacer fotos
+	fase = 2 -> subir fotos
+	fase = 3 -> apagar
+	*/
+    if (llama == 0) {
+        if (apagado)
+            encender();
+	    if ((num_fotos == game.getMemorySize() && sig_llama != 1) || tiempo > 220) {
+	        DEBUG(("fase 2a\n"));
+            fase = 2;
+	    }
+        else if (sig_llama == -1 || sig_llama > t_lim) {
+            DEBUG(("fase 1\n"));
+            fase = 1;
+        }
+        else if (sig_llama > 1) {
+            DEBUG(("fase 2b\n"));
+            fase = 2;
+        }
+        else {
+            DEBUG(("fase 3\n"));
+            fase = 3;
+            llama = 4;
+        }
+	}
+    else
+        llama--;
+}
+
+void encender() {
+    game.turnOn();
+    apagado = false;
+}
+
+void hacer_fotos() {
+    indice = orden[sig_foto];
+    sig_id = indice/2;
+    DEBUG(("Foto de POI %d desde orbita %s\n", sig_id, orbita?"alta":"baja"));
+    for (int i=0; i<3; i++)
+        dest[i] = picPos[indice][i];
+    if (r > radios[orbita+1] && r < radios[orbita+2] && game.alignLine(sig_id))
+        game.takePic(sig_id);
+    else
+        ir_a(dest);
+    if (game.getMemoryFilled() > num_fotos) {
+        sig_foto++;
+        num_fotos++;
+    }
+}
+
+void ir_a(float dest[3]) {
+    //api.setPositionTarget(dest);
+    mathVecSubtract(attTarget, zero, myPos, 3);
+    mathVecNormalize(attTarget, 3);
+    api.setAttitudeTarget(attTarget);
+    
+    dot = mathVecInner(myPos,dest,3)/(mathVecMagnitude(myPos,3)*mathVecMagnitude(dest,3));
+    //DEBUG(("angulo hasta destino = %f\n", angulo));
+    if (acosf(dot)*180/PI < 60.0f) {
+        // habría que crear función para ir en línea recta más rápido
+        linea_recta(dest);
+    }
+    else {
+        if (!hay_intermedio || distancia_a_punto(myPos, intermedio) < 0.05f) {
+            mathVecAdd(intermedio, myPos, dest, 3);
+            escala_vector(intermedio, intermedio, rad_pic[2]);
+            hay_intermedio = true;
+        }
+        linea_recta(intermedio);
+    }
+}
+
+void linea_recta(float dest[3]) {
+    DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
+    DEBUG(("myPos <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
+    mathVecSubtract(force, dest, myPos, 3);
+    tmp = mathVecMagnitude(force, 3);
+    if (1<0/*tmp > 0.5*/) {
+        DEBUG(("original force <%f, %f, %f>\n", force[0], force[1], force[2]));
+        escala_vector(force, force, 0.05);
+        api.setForces(force);
+        DEBUG(("forces <%f, %f, %f>\n", force[0], force[1], force[2]));
+    }
+    else
+        api.setPositionTarget(dest);
+}
+
+void preparar_fotos() {
+    DEBUG(("preparando fotos\n"));
+    for (int i=0; i<3; i++) {
+        game.getPOILoc(&poiPos[i*3], i);
+        for (int j=0; j<3; j++) {
+            picPos[i*2][j] = poiPos[i*3 + j]*rad_pic[0]/radios[0];
+            picPos[i*2 + 1][j] = poiPos[i*3 + j]*rad_pic[1]/radios[0];
+        }
+    }
+    orden_fotos(orden);
+    for (int i=0; i<6; i++)
+        DEBUG(("orden[%d] = %d\n", i, orden[i]));
+    sig_foto = 0;
+    for (int i=0; i<6; i++) {
+        for (int j=0; j<3; j++) {
+            DEBUG(("picPos[%d][%d] = %f\n", i, j, picPos[i][j]));
+        }
+    }
+}
+
+void orden_fotos(int orden[6]) {
+    float dist0 = distancia_a_punto(myPos, &poiPos[0]);
+    float dist1 = distancia_a_punto(myPos, &poiPos[3]);
+    float dist2 = distancia_a_punto(myPos, &poiPos[6]);
+    if (dist0 < dist1) {
+        if (dist0 < dist2) {
+            if (dist1 < dist2) {
+                orden[0] = 0;
+                orden[1] = 1;
+                orden[2] = 2;
+                orden[3] = 3;
+                orden[4] = 4;
+                orden[5] = 5;
+            }
+            else {
+                orden[0] = 0;
+                orden[1] = 1;
+                orden[2] = 4;
+                orden[3] = 5;
+                orden[4] = 2;
+                orden[5] = 3;
+            }
+        }
+        else {
+            orden[0] = 4;
+            orden[1] = 5;
+            orden[2] = 0;
+            orden[3] = 1;
+            orden[4] = 2;
+            orden[5] = 3;
+        }
+    }
+    else {
+        if (dist2 < dist0) {
+            if (dist1 < dist2) {
+                orden[0] = 2;
+                orden[1] = 3;
+                orden[2] = 4;
+                orden[3] = 5;
+                orden[4] = 0;
+                orden[5] = 1;
+            }
+            else {
+                orden[0] = 4;
+                orden[1] = 5;
+                orden[2] = 2;
+                orden[3] = 3;
+                orden[4] = 0;
+                orden[5] = 1;
+            }
+        }
+        else {
+            orden[0] = 2;
+            orden[1] = 3;
+            orden[2] = 0;
+            orden[3] = 1;
+            orden[4] = 4;
+            orden[5] = 5;
+        }
+    }
+}
+
+void subir_fotos() {
+    escala_vector(dest, myPos, rad_pic[2]);
+    ir_a(dest);
+    if (r > radios[3]) {
+        game.uploadPic();
+        DEBUG(("subida???\n"));
+        if (game.getMemoryFilled() < num_fotos) {
+            DEBUG(("SUBIDA!!"));
+            num_fotos = 0;
+        }
+    }
+}
+
+//-------MAIN---------------
+
+int tiempo;
+int fase;
+int llama;
+int sig_llama;
+int indice;
+int sig_foto;
+int num_fotos;      // fotos hechas en el ciclo de 60 s
+int sig_id;         // id del siguiente POI a fotografiar
+int t_lim;          // tiempo límite antes de llama para upload
+int orbita;         // 0 = baja / 1 = alta
+
+int orden[6];
+
+float myState[12];
+float myPos[3];
+float attTarget[3];
+float zero[3];
+float force[3];
+float poiPos[9];
+float picPos[6][3]; // puntos para foto para las dos órbitas de los 3 POIs
+float rad_pic[3];   // radios para las fotos
+float radios[4];    // radios de las orbitas
+float dest[3];      // para guardar destinos
+float r;            // guarda en cada paso la distancia al origen (modulo del vector posicion)
+
+//----
+float dot;
+float eje[3];
+float intermedio[3];
+float tmp;
+//----
+
+
+bool apagado;
+bool hay_intermedio;
+bool en_marcha;
+
+void init() {
+	tiempo = 0;
+	llama = 0;
+	t_lim = 20;
+	fase = 1;
+	apagado = false;
+	
+    radios[0] = 0.20f;  // radio asteroide
+    radios[1] = 0.31f;  // radio exterior peligro / interior baja
+    radios[2] = 0.42f;  // radio exterior baja / interior alta
+    radios[3] = 0.53f;  // radio exterior alta
+	rad_pic[0] = 0.37f;
+	rad_pic[1] = 0.45f;
+	rad_pic[2] = 0.55f;
+	
+	api.getMyZRState(myState);
+	for (int i=0; i<3; i++) {
+	    zero[i] = 0.0f;
+	    myPos[i] = myState[i];
+	    dest[i] = myState[i];
+	}
+	   
+	preparar_fotos();
+}
+
+void loop() {
+	actualizar_variables();
+	dame_fase();
+	switch_case(fase);
+	DEBUG(("fase = %d\n", fase));
+}
+
+void switch_case(int fase) {
+    switch (fase) {
+	    case 1:
+	        DEBUG(("hacer_fotos\n"));
+	        hacer_fotos();
+	        break;
+	    case 2:
+	        DEBUG(("subir_fotos\n"));
+	        subir_fotos();
+	        break;
+	    case 3:
+	        DEBUG(("apagar\n"));
+	        apagar();
+	        break;
+	}
+}
+```
