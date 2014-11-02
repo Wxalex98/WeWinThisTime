@@ -10,7 +10,7 @@ void actualizar_variables() {
 	if (num_fotos == sig_foto + 1)
 	    sig_foto++;
 	orbita = sig_foto % 2;
-	if (tiempo % 60 == 1)
+	if (tiempo % 60 == 1 || api.getTime() % 60 == 1)
 	    preparar_fotos();
 }
 
