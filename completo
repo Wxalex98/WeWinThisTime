@@ -238,7 +238,7 @@ void init() {
 	t_lim = 20;
 	fase = 1;
 	apagado = false;
-	
+	hay_intermedio = false;
     radios[0] = 0.20f;  // radio asteroide
     radios[1] = 0.31f;  // radio exterior peligro / interior baja
     radios[2] = 0.42f;  // radio exterior baja / interior alta
