@@ -127,56 +127,26 @@ void ir_a(float dest[3]) {
     api.setAttitudeTarget(attTarget);
     
     dot = mathVecInner(myPos,dest,3)/(mathVecMagnitude(myPos,3)*mathVecMagnitude(dest,3));
-    DEBUG(("angulo hasta destino = %f\n", acosf(dot)*180/PI));
-    if (acosf(dot)*180/PI < 60.0f) {
-        // habría que crear función para ir en línea recta más rápido
+    angulo = acosf(dot)*180/PI;
+    DEBUG(("angulo hasta destino = %f\n", angulo));
+    if (angulo < 50.0f) {
         hay_intermedio = false;
         linea_recta(dest);
     }
     else {
         if (!hay_intermedio || distancia_a_punto(myPos, intermedio) < 0.05f) {
-            mathVecAdd(intermedio, myPos, dest, 3);
-            escala_vector(intermedio, intermedio, rad_pic[2]);
+            //DEBUG(("calculando punto intermedio...\n"));
+            mathVecCross(eje, myPos, dest);
+            rotar_vector(intermedio, eje, myPos, angulo/2);
+            tmp = (mathVecMagnitude(myPos, 3) + mathVecMagnitude(dest, 3))/2.0;
+            //DEBUG(("tmp = %f", tmp));
+            escala_vector(intermedio, intermedio, tmp);
             hay_intermedio = true;
         }
         //DEBUG(("intermedio <%f, %f, %f>\n", intermedio[0], intermedio[1], intermedio[2]));
         linea_recta(intermedio);
     }
 }
-
-/*
-void ir_a(float dest[3]) {
-    mathVecSubtract(attTarget, zero, myPos, 3);
-    mathVecNormalize(attTarget, 3);
-    api.setAttitudeTarget(attTarget);
-    
-    if (distancia_a_punto(myPos, dest) > 0.05f) {
-        dot = mathVecInner(myPos,dest,3)/(mathVecMagnitude(myPos,3)*mathVecMagnitude(dest,3));
-        //DEBUG(("angulo hasta destino = %f\n", angulo));
-        if (acosf(dot)*180/PI < 60.0f) {
-            // habría que crear función para ir en línea recta más rápido
-            api.setPositionTarget(dest);
-        }
-        else {
-            if (!hay_intermedio || distancia_a_punto(myPos, intermedio) < 0.05f) {
-                DEBUG(("calculando punto intermedio...\n"));
-                mathVecCross(eje, myPos, dest);
-                rotar_vector(intermedio, eje, myPos, 60.0f);
-                tmp = (mathVecMagnitude(myPos, 3) + mathVecMagnitude(dest, 3))/2.0;
-                DEBUG(("tmp = %f", tmp));
-                escala_vector(intermedio, intermedio, tmp);
-                hay_intermedio = true;
-            }
-            api.setPositionTarget(intermedio);
-        }
-    }
-    else {
-        en_marcha = false;
-        hay_intermedio = false;
-        DEBUG(("hemos llegado!\n"));
-    }
-}
-*/
 
 void linea_recta(float dest[3]) {
     DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
@@ -219,6 +189,7 @@ float rad_pic[3];   // radios para las fotos
 float radios[4];    // radios de las orbitas
 float dest[3];      // para guardar destinos
 float r;            // guarda en cada paso la distancia al origen (modulo del vector posicion)
+float angulo;
 
 //----
 float dot;
