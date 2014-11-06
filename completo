@@ -6,18 +6,14 @@ void actualizar_variables() {
 	    myPos[i] = myState[i];
 	r = mathVecMagnitude(myPos, 3);
 	sig_llama = game.getNextFlare();
+	if (sig_llama == -1)
+	    sig_llama = 31;
 	num_fotos = game.getMemoryFilled();
 	if (num_fotos == sig_foto + 1)
 	    sig_foto++;
 	orbita = sig_foto % 2;
 	if (tiempo % 60 == 1 || api.getTime() % 60 == 1)
 	    preparar_fotos();
-}
-
-void apagar() {
-    api.setPositionTarget(myPos);
-    game.turnOff();
-    apagado = true;
 }
 
 void escala_vector(float point[3], float ahora[3], float radio) {
@@ -27,6 +23,7 @@ void escala_vector(float point[3], float ahora[3], float radio) {
     //DEBUG(("nuevo radio = %f\n", radio));
     for (int i=0; i<3; i++)
         point[i] = ahora[i]*radio;
+    //DEBUG(("ESCALA: point(%f,%f,%f)",point[0],point[1],point[2]));
     //DEBUG(("vamos a altura %f\n", radio));
 }
 
@@ -37,9 +34,9 @@ float distancia_a_punto(float aqui[3], float alla[3]) {
 }
 
 void distancia_a_origen(float dist[3], float orig[3], float dest[3]) {
-    // dist = p - (p·r)r
+    // dist = p - (pÂ·r)r
     // donde r es un vector unitario que define la
-    // dirección de la recta y p un punto de la recta
+    // direcciÃ³n de la recta y p un punto de la recta
     // p. ej. p = orig, r = (dest-orig)/|(dest-orig)|
     float r[3];
     mathVecSubtract(r, dest, orig, 3);
@@ -47,15 +44,15 @@ void distancia_a_origen(float dist[3], float orig[3], float dest[3]) {
     float prod_esc = mathVecInner(orig, r, 3);
     for (int i=0; i<3; i++) {
         r[i] = r[i]*prod_esc;
-    } // tras el for, ahora r <- (p·r)r
+    } // tras el for, ahora r <- (pÂ·r)r
     mathVecSubtract(dist, orig, r, 3);
 }
 
 void rotar_vector(float rot[3], float eje[3], float vec[3], float ang) {
     // rotar_vector() devuelve en *rot[]* el vector *vec[]*
     // rotado *ang* grados alrededor del vector *eje[]*
-    // según la regla de la mano derecha o del sacacorchos
-    // usando la fórmula de Rodrigues (ver en wikipedia Rodrigues'_rotation_formula)
+    // segÃºn la regla de la mano derecha o del sacacorchos
+    // usando la fÃ³rmula de Rodrigues (ver en wikipedia Rodrigues'_rotation_formula)
     mathVecNormalize(eje, 3); // normalizamos el eje
     float cross[3];
     mathVecCross(cross, eje, vec);
@@ -74,9 +71,38 @@ void dame_fase() {
     if (llama == 0) {
         if (apagado)
             encender();
-	    if ((num_fotos == game.getMemorySize() && sig_llama != 1) || tiempo > 220) {
-	        DEBUG(("fase 2a\n"));
+            
+        if (sig_llama == 1) {
+            DEBUG(("APAGAR\n"));
+            fase = 3;
+            llama = 4;
+        }
+        else if (game.getMemoryFilled() == game.getMemorySize()) {
+            DEBUG(("SUBIR (MEMORIA LLENA)\n"));
             fase = 2;
+        }
+        else if (tiempo > 225 && game.getMemoryFilled() > 0) {
+            DEBUG(("SUBIR (POCO TIEMPO)\n"));
+            fase = 2;
+        }
+        else if (sig_llama > t_lim) {
+            DEBUG(("FOTOS (POI %d)\n", sig_id));
+            fase = 1;
+        }
+        else if (game.getMemoryFilled() > 0) {
+            DEBUG(("SUBIR (LLAMA)\n"));
+            fase = 2;
+        }
+        else {
+            DEBUG(("LLAMA CERCA: ACERCANDO A SIGUIENTE POI\n"));
+            fase = 1;
+        }
+        /*
+	    if (sig_llama != 1) {
+	        if ((num_fotos == game.getMemorySize()) || ((game.getMemoryFilled() > 0) && (tiempo > 226))) {
+	            DEBUG(("fase 2a\n"));
+                fase = 2;
+	        }
 	    }
         else if (sig_llama == -1 || sig_llama > t_lim) {
             DEBUG(("fase 1\n"));
@@ -91,29 +117,26 @@ void dame_fase() {
             fase = 3;
             llama = 4;
         }
+        */
 	}
     else
         llama--;
 }
 
-void encender() {
-    game.turnOn();
-    apagado = false;
-}
-
 void hacer_fotos() {
     indice = orden[sig_foto];
     sig_id = indice/2;
-    DEBUG(("Foto de POI %d desde orbita %s\n", sig_id, orbita?"alta":"baja"));
     for (int i=0; i<3; i++)
         dest[i] = picPos[indice][i];
+    //DEBUG(("dest!! <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
     if (r > radios[orbita+1] && r < radios[orbita+2] && game.alignLine(sig_id)) {
-        DEBUG(("tomando foto de %d\n", sig_id));
+        DEBUG(("Foto de POI %d desde orbita %s\n", sig_id, orbita?"alta":"baja"));
         game.takePic(sig_id);
     }
-    else
-        //DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
+    else {
+        //DEBUG(("dest!! <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
         ir_a(dest);
+    }
     if (game.getMemoryFilled() > num_fotos) {
         sig_foto++;
         num_fotos++;
@@ -127,43 +150,92 @@ void ir_a(float dest[3]) {
     api.setAttitudeTarget(attTarget);
     
     dot = mathVecInner(myPos,dest,3)/(mathVecMagnitude(myPos,3)*mathVecMagnitude(dest,3));
-    angulo = acosf(dot)*180/PI;
-    DEBUG(("angulo hasta destino = %f\n", angulo));
-    if (angulo < 50.0f) {
-        hay_intermedio = false;
+    //DEBUG(("angulo hasta destino = %f\n", acosf(dot)*180/PI));
+    //DEBUG(("dot = %f\n", dot));
+    if (dot > 0.643f) { // dot = cos(angulo) > 0.643 = cos(50) es decir ang < 50
+        // habrÃ­a que crear funciÃ³n para ir en lÃ­nea recta mÃ¡s rÃ¡pido
+        if (hay_intermedio) {
+            hay_intermedio = false;
+            for (int i=0; i<3; i++)
+	            intermedio[i] = 0.0f;
+        }
         linea_recta(dest);
     }
     else {
         if (!hay_intermedio || distancia_a_punto(myPos, intermedio) < 0.05f) {
-            //DEBUG(("calculando punto intermedio...\n"));
             mathVecCross(eje, myPos, dest);
-            rotar_vector(intermedio, eje, myPos, angulo/2);
+            //DEBUG(("MYPOS <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
+            //DEBUG(("DEST <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
+            //DEBUG(("EJE <%f, %f, %f>\n", eje[0], eje[1], eje[2]));
+            //DEBUG(("INTERMEDIO-PRE <%f, %f, %f>\n", intermedio[0], intermedio[1], intermedio[2]));
+            //DEBUG(("angulo = %f\n",acosf(sqrt((dot+1)*0.5))*180/PI));
+            rotar_vector(intermedio, eje, myPos, acosf(sqrt((dot+1)*0.5))*180/PI);
+            //DEBUG(("INTERMEDIO <%f, %f, %f>\n", intermedio[0], intermedio[1], intermedio[2]));
             tmp = (mathVecMagnitude(myPos, 3) + mathVecMagnitude(dest, 3))/2.0;
-            //DEBUG(("tmp = %f", tmp));
-            escala_vector(intermedio, intermedio, tmp);
+            escala_vector(intermedio, intermedio, rad_pic[2]);
             hay_intermedio = true;
+            //DEBUG(("CALCULO INTERMEDIO\n"));
         }
+        //DEBUG(("MYPOS <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
         //DEBUG(("intermedio <%f, %f, %f>\n", intermedio[0], intermedio[1], intermedio[2]));
         linea_recta(intermedio);
     }
 }
 
-void linea_recta(float dest[3]) {
-    DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
-    DEBUG(("myPos <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
-    mathVecSubtract(force, dest, myPos, 3);
-    tmp = mathVecMagnitude(force, 3);
-    if (1<0/*tmp > 0.5*/) {
-        DEBUG(("original force <%f, %f, %f>\n", force[0], force[1], force[2]));
-        escala_vector(force, force, 0.05);
-        api.setForces(force);
-        DEBUG(("forces <%f, %f, %f>\n", force[0], force[1], force[2]));
+/*
+void ir_a(float dest[3]) {
+    mathVecSubtract(attTarget, zero, myPos, 3);
+    mathVecNormalize(attTarget, 3);
+    api.setAttitudeTarget(attTarget);
+    
+    if (distancia_a_punto(myPos, dest) > 0.05f) {
+        dot = mathVecInner(myPos,dest,3)/(mathVecMagnitude(myPos,3)*mathVecMagnitude(dest,3));
+        //DEBUG(("angulo hasta destino = %f\n", angulo));
+        if (acosf(dot)*180/PI < 60.0f) {
+            // habrÃ­a que crear funciÃ³n para ir en lÃ­nea recta mÃ¡s rÃ¡pido
+            api.setPositionTarget(dest);
+        }
+        else {
+            if (!hay_intermedio || distancia_a_punto(myPos, intermedio) < 0.05f) {
+                DEBUG(("calculando punto intermedio...\n"));
+                mathVecCross(eje, myPos, dest);
+                rotar_vector(intermedio, eje, myPos, 60.0f);
+                tmp = (mathVecMagnitude(myPos, 3) + mathVecMagnitude(dest, 3))/2.0;
+                DEBUG(("tmp = %f", tmp));
+                escala_vector(intermedio, intermedio, tmp);
+                hay_intermedio = true;
+            }
+            api.setPositionTarget(intermedio);
+        }
     }
-    else
+    else {
+        en_marcha = false;
+        hay_intermedio = false;
+        DEBUG(("hemos llegado!\n"));
+    }
+}
+*/
+
+void linea_recta(float dest[3]) {
+    //DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
+    //DEBUG(("myPos <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
+    tmp = distancia_a_punto(myPos, dest);
+    //if (tmp < 0.4) {
+    if (1>0) {
         api.setPositionTarget(dest);
+        //DEBUG(("RECTO A <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
+    }
+    else {
+        DEBUG(("FORCE-PRE <%f, %f, %f>\n", force[0], force[1], force[2]));
+        mathVecSubtract(force, dest, myPos, 3);
+        tmp = mathVecMagnitude(force, 3);
+        escala_vector(force, force, 0.04);
+        api.setForces(force);
+        DEBUG(("FORCE-POS <%f, %f, %f>\n", force[0], force[1], force[2]));
+    }
 }
 
-//-------MAIN
+//--- MAIN EMPIEZA
 
 int tiempo;
 int fase;
@@ -173,7 +245,7 @@ int indice;
 int sig_foto;
 int num_fotos;      // fotos hechas en el ciclo de 60 s
 int sig_id;         // id del siguiente POI a fotografiar
-int t_lim;          // tiempo límite antes de llama para upload
+int t_lim;          // tiempo lÃ­mite antes de llama para upload
 int orbita;         // 0 = baja / 1 = alta
 
 int orden[6];
@@ -184,12 +256,12 @@ float attTarget[3];
 float zero[3];
 float force[3];
 float poiPos[9];
-float picPos[6][3]; // puntos para foto para las dos órbitas de los 3 POIs
+float picPos[6][3]; // puntos para foto para las dos Ã³rbitas de los 3 POIs
 float rad_pic[3];   // radios para las fotos
 float radios[4];    // radios de las orbitas
 float dest[3];      // para guardar destinos
+float uploadPos[3]; // guardar sitio para subir foto, encima de la siguiente foto
 float r;            // guarda en cada paso la distancia al origen (modulo del vector posicion)
-float angulo;
 
 //----
 float dot;
@@ -202,14 +274,17 @@ float tmp;
 bool apagado;
 bool hay_intermedio;
 bool en_marcha;
+bool subiendo;
 
 void init() {
 	tiempo = 0;
 	llama = 0;
-	t_lim = 20;
+	t_lim = 15;
 	fase = 1;
 	apagado = false;
 	hay_intermedio = false;
+	subiendo = false;
+	
     radios[0] = 0.20f;  // radio asteroide
     radios[1] = 0.31f;  // radio exterior peligro / interior baja
     radios[2] = 0.42f;  // radio exterior baja / interior alta
@@ -224,6 +299,8 @@ void init() {
 	    myPos[i] = myState[i];
 	    dest[i] = myState[i];
 	    intermedio[i] = 0.0f;
+	    force[i] = 0.0f;
+	    uploadPos[i] = 0.0f;
 	}
 	   
 	preparar_fotos();
@@ -231,58 +308,74 @@ void init() {
 
 void loop() {
 	actualizar_variables();
-	DEBUG(("siguiente llama: %d\n", sig_llama));
+	DEBUG(("Siguiente llama en %d segundos\n", sig_llama));
 	dame_fase();
 	switch_case(fase);
-	DEBUG(("fase = %d\n", fase));
+	//DEBUG(("fase = %d\n", fase));
 }
 
 void switch_case(int fase) {
     switch (fase) {
 	    case 1:
-	        DEBUG(("hacer_fotos\n"));
+	        //DEBUG(("hacer_fotos\n"));
 	        hacer_fotos();
 	        break;
 	    case 2:
-	        DEBUG(("subir_fotos\n"));
+	        //DEBUG(("subir_fotos\n"));
 	        subir_fotos();
 	        break;
 	    case 3:
-	        DEBUG(("apagar\n"));
+	        //DEBUG(("apagar\n"));
 	        apagar();
 	        break;
 	}
 }
 
-//----FIN MAIN
+//---- MAIN ACABA
+
+void apagar() {
+    api.setPositionTarget(myPos);
+    game.turnOff();
+    apagado = true;
+}
+
+void encender() {
+    game.turnOn();
+    apagado = false;
+}
 
 void preparar_fotos() {
-    DEBUG(("preparando fotos\n"));
-    for (int i=0; i<3; i++) {
+    DEBUG(("Preparando fotos\n"));
+    for (int i=0; i<3; i++)
         game.getPOILoc(&poiPos[i*3], i);
+    for (int i=0; i<3; i++) {
         for (int j=0; j<3; j++) {
             picPos[i*2][j] = poiPos[i*3 + j]*rad_pic[0]/radios[0];
             picPos[i*2 + 1][j] = poiPos[i*3 + j]*rad_pic[1]/radios[0];
         }
     }
     orden_fotos(orden);
-    for (int i=0; i<6; i++)
-        DEBUG(("orden[%d] = %d\n", i, orden[i]));
     sig_foto = 0;
+    /*
     for (int i=0; i<6; i++) {
         for (int j=0; j<3; j++) {
             DEBUG(("picPos[%d][%d] = %f\n", i, j, picPos[i][j]));
         }
     }
+    */
 }
 
 void orden_fotos(int orden[6]) {
     float dist0 = distancia_a_punto(myPos, &poiPos[0]);
     float dist1 = distancia_a_punto(myPos, &poiPos[3]);
     float dist2 = distancia_a_punto(myPos, &poiPos[6]);
+    float dist01 = distancia_a_punto(&poiPos[0], &poiPos[3]);
+    float dist02 = distancia_a_punto(&poiPos[0], &poiPos[6]);
+    float dist12 = distancia_a_punto(&poiPos[3], &poiPos[6]);
+    //DEBUG(("DISTANCIAS = %f, %f, %f\n", dist0, dist1, dist2));
     if (dist0 < dist1) {
         if (dist0 < dist2) {
-            if (dist1 < dist2) {
+            if (dist01 < dist02) {
                 orden[0] = 0;
                 orden[1] = 1;
                 orden[2] = 2;
@@ -300,23 +393,13 @@ void orden_fotos(int orden[6]) {
             }
         }
         else {
-            orden[0] = 4;
-            orden[1] = 5;
-            orden[2] = 0;
-            orden[3] = 1;
-            orden[4] = 2;
-            orden[5] = 3;
-        }
-    }
-    else {
-        if (dist2 < dist0) {
-            if (dist1 < dist2) {
-                orden[0] = 2;
-                orden[1] = 3;
-                orden[2] = 4;
-                orden[3] = 5;
-                orden[4] = 0;
-                orden[5] = 1;
+            if (dist02 < dist12) {
+                orden[0] = 4;
+                orden[1] = 5;
+                orden[2] = 0;
+                orden[3] = 1;
+                orden[4] = 2;
+                orden[5] = 3;
             }
             else {
                 orden[0] = 4;
@@ -327,27 +410,81 @@ void orden_fotos(int orden[6]) {
                 orden[5] = 1;
             }
         }
-        else {
-            orden[0] = 2;
-            orden[1] = 3;
-            orden[2] = 0;
-            orden[3] = 1;
-            orden[4] = 4;
-            orden[5] = 5;
+    }
+    else { // es decir, si dist1 < dist0
+        if (dist1 < dist2) {
+            if (dist01 < dist12) {
+                orden[0] = 2;
+                orden[1] = 3;
+                orden[2] = 0;
+                orden[3] = 1;
+                orden[4] = 4;
+                orden[5] = 5;
+            }
+            else {
+                orden[0] = 2;
+                orden[1] = 3;
+                orden[2] = 4;
+                orden[3] = 5;
+                orden[4] = 0;
+                orden[5] = 1;
+            }
+        }
+        else { // es decir, dist2 < dist1 < dist0
+            if (dist02 < dist12) {
+                orden[0] = 4;
+                orden[1] = 5;
+                orden[2] = 0;
+                orden[3] = 1;
+                orden[4] = 2;
+                orden[5] = 3;
+            }
+            else {
+                orden[0] = 4;
+                orden[1] = 5;
+                orden[2] = 2;
+                orden[3] = 3;
+                orden[4] = 0;
+                orden[5] = 1;
+            }
         }
     }
+    DEBUG(("Orden = %d%d%d\n", orden[0]/2, orden[2]/2, orden[4]/2));
 }
 
-
 void subir_fotos() {
-    escala_vector(dest, myPos, rad_pic[2]);
-    ir_a(dest);
+    if (1<0 && !subiendo && sig_llama > t_lim) {
+        indice = orden[sig_foto];
+        for (int i=0; i<3; i++) {
+            //uploadPos[i] = picPos[indice][i];
+            uploadPos[i] = (picPos[indice][i] + myPos[i])/2.0;
+        }
+        escala_vector(uploadPos, uploadPos, rad_pic[2]);
+        subiendo = true;
+    }
+    else if (!subiendo) {
+        escala_vector(uploadPos, myPos, rad_pic[2]);
+        subiendo = true;
+    }
+    //escala_vector(dest, myPos, rad_pic[2]);
+    //DEBUG(("SUBIR FOTOS: dest = <%f, %f, %f>\n",dest[0],dest[1],dest[2]));
+    /*
+    if (sig_llama < t_lim && subiendo) {
+        escala_vector(uploadPos, myPos, rad_pic[2]); 
+        subiendo = false;
+    }
+    */
+    //api.setPositionTarget(uploadPos);
+    //ir_a(uploadPos);
+    linea_recta(uploadPos);
     if (r > radios[3]) {
         game.uploadPic();
-        DEBUG(("subida???\n"));
+        subiendo = false;
+        //DEBUG(("subida???\n"));
         if (game.getMemoryFilled() < num_fotos) {
-            DEBUG(("SUBIDA!!"));
+            DEBUG(("SUBIDAS %d FOTOS!!\n", num_fotos));
             num_fotos = 0;
+            subiendo = false;
         }
     }
 }
