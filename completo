@@ -220,22 +220,23 @@ void linea_recta(float dest[3]) {
     //DEBUG(("dest <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
     //DEBUG(("myPos <%f, %f, %f>\n", myPos[0], myPos[1], myPos[2]));
     tmp = distancia_a_punto(myPos, dest);
-    //if (tmp < 0.4) {
-    if (1>0) {
+    if (tmp < 0.5) {
+    //if (1>0) {
         api.setPositionTarget(dest);
         //DEBUG(("RECTO A <%f, %f, %f>\n", dest[0], dest[1], dest[2]));
     }
     else {
-        DEBUG(("FORCE-PRE <%f, %f, %f>\n", force[0], force[1], force[2]));
+        //DEBUG(("FORCE-PRE <%f, %f, %f>\n", force[0], force[1], force[2]));
+        DEBUG(("VEL-PRE <%f, %f, %f>\n", force[0], force[1], force[2]));
         mathVecSubtract(force, dest, myPos, 3);
-        tmp = mathVecMagnitude(force, 3);
-        escala_vector(force, force, 0.04);
-        api.setForces(force);
-        DEBUG(("FORCE-POS <%f, %f, %f>\n", force[0], force[1], force[2]));
+        //tmp = mathVecMagnitude(force, 3);
+        //escala_vector(force, force, 0.04);
+        //api.setForces(force);
+        api.setVelocityTarget(force);
+        //DEBUG(("FORCE-POS <%f, %f, %f>\n", force[0], force[1], force[2]));
+        DEBUG(("VEL-POS <%f, %f, %f>\n", force[0], force[1], force[2]));
     }
 }
-
-//--- MAIN EMPIEZA
 
 int tiempo;
 int fase;
@@ -279,7 +280,7 @@ bool subiendo;
 void init() {
 	tiempo = 0;
 	llama = 0;
-	t_lim = 15;
+	t_lim = 20;
 	fase = 1;
 	apagado = false;
 	hay_intermedio = false;
@@ -331,7 +332,6 @@ void switch_case(int fase) {
 	}
 }
 
-//---- MAIN ACABA
 
 void apagar() {
     api.setPositionTarget(myPos);
@@ -452,6 +452,7 @@ void orden_fotos(int orden[6]) {
     DEBUG(("Orden = %d%d%d\n", orden[0]/2, orden[2]/2, orden[4]/2));
 }
 
+
 void subir_fotos() {
     if (1<0 && !subiendo && sig_llama > t_lim) {
         indice = orden[sig_foto];
@@ -476,8 +477,12 @@ void subir_fotos() {
     */
     //api.setPositionTarget(uploadPos);
     //ir_a(uploadPos);
-    linea_recta(uploadPos);
-    if (r > radios[3]) {
+    //linea_recta(uploadPos);
+    if (r < radios[3]) {
+        api.setVelocityTarget(myPos);
+    }
+    else {
+        api.setVelocityTarget(zero);
         game.uploadPic();
         subiendo = false;
         //DEBUG(("subida???\n"));
