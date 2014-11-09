@@ -3,32 +3,67 @@
 // Si es 1 es como si usaramos setPositionTarget
 // En los tutoriales usan 0.94, pero creo que con 0.8 sirve. Cuanta menor distancia nos podemos permitir menor stopFac
 
-
 float weAreGoing[3];
+float myState[12];
+float whereToGo[3];
+float preventDist;
+float myPos[3];
+float fraction;
 
-void goTo(float myPos[3], float posTarget[3], flaot preventDist, float stopFac){
-  float vectorBetween;
+bool comparaVec(float vec1[3], float vec2[3]) {
+    for (int i = 0; i<3; i++) { 
+        if (vec1[i] != vec2[i]){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void goTo(float posTarget[3], float stopFac){
+  float vectorBetween[3];
   float distance;
+  
+  DEBUG(("we: %f %f %f\n", weAreGoing[0],weAreGoing[1],weAreGoing[2]));
+  DEBUG(("target: %f %f %f\n", posTarget[0],posTarget[1],posTarget[2]));
 
-  if (weAreGoing != posTarget) {
+  if (comparaVec(weAreGoing, posTarget)) {
     for (int i = 0; i<3; i++)
         weAreGoing[i] = posTarget[i];
     preventDist = -1.0;
-  }
-  
-  if (preventDist == -1.0) {
-  	mathVecSubtract(vectorBetween,posTarget,myPos,3);
-  	preventDist = vectorBetween * stopFac; 
+    DEBUG(("NUEVA DIRECCION\n"));
   }
     
   mathVecSubtract(vectorBetween,posTarget,myPos,3);
 	    
   distance = mathVecMagnitude(vectorBetween,3);
+  DEBUG(("DISTANCIA: %f\n", distance));
+  
+  if (preventDist == -1.0) {
+  	preventDist = distance * stopFac;
+  	DEBUG(("DISTANCIA PREVN: %f\n", preventDist));
+  }
 	
-	if (distance>preventDist) {
-	    api.setVelocityTarget(vectorBetween);
-	} else {
-	    api.setPositionTarget(posTarget);
-	}
+  if (distance>preventDist) {
+	  api.setVelocityTarget(vectorBetween);
+	  DEBUG(("RAPIDO\n"));
+  } else {
+	  api.setPositionTarget(posTarget);
+	  DEBUG(("FRENA\n"));
+  }
+}
+
+void init() {
+    fraction = 0.8;
+    whereToGo[0] = 0.6;
+    whereToGo[1] = 0.4;
+    whereToGo[2] = 0.6;
+}
+
+void loop() {
+    api.getMyZRState(myState);
+	for (int i=0; i<3; i++)
+	    myPos[i] = myState[i];
+	    
+	goTo(whereToGo, fraction);
 }
 
