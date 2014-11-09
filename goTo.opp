@@ -53,7 +53,7 @@ void goTo(float posTarget[3], float stopFac){
 }
 
 void init() {
-    fraction = 0.8;
+    fraction = 0.9;
     whereToGo[0] = 0.6;
     whereToGo[1] = 0.4;
     whereToGo[2] = 0.6;
