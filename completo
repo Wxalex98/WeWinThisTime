@@ -479,7 +479,8 @@ void subir_fotos() {
     //ir_a(uploadPos);
     //linea_recta(uploadPos);
     if (r < radios[3]) {
-        api.setVelocityTarget(myPos);
+        escala_vector(force, myPos, 0.6-r);
+        api.setVelocityTarget(force);
     }
     else {
         api.setVelocityTarget(zero);
